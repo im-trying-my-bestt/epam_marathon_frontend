@@ -1,0 +1,198 @@
+<div class="demo-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">GREEN & TASTY</span>
+      <h1>Group Order</h1>
+      <p class="subtitle">
+        Manage your group's pre-order in one place.
+      </p>
+    </div>
+
+    <div class="demo-label">
+      DEMO MODE
+    </div>
+  </header>
+
+  <section class="reservation-info">
+    <div>
+      <span class="info-label">Restaurant</span>
+      <strong>Green & Tasty</strong>
+    </div>
+
+    <div>
+      <span class="info-label">Address</span>
+      <strong>Rustaveli Avenue 48</strong>
+    </div>
+
+    <div>
+      <span class="info-label">Table</span>
+      <strong>№ 7</strong>
+    </div>
+
+    <div>
+      <span class="info-label">Reservation time</span>
+      <strong>16:00 – 17:30</strong>
+    </div>
+  </section>
+
+  <section class="overview">
+    <div class="overview-card">
+      <span class="info-label">Participants</span>
+      <strong>{{ status().currentParticipants }} / {{ status().maxCapacity }}</strong>
+    </div>
+
+    <div class="overview-card">
+      <span class="info-label">Group total</span>
+      <strong>{{ sessions().total.toFixed(2) }} $</strong>
+    </div>
+
+    <div class="overview-card">
+      <span class="info-label">Order status</span>
+      <strong [class.submitted]="status().status === 'Submitted'">
+        {{ status().status }}
+      </strong>
+    </div>
+  </section>
+
+  @if (message()) {
+  <div class="message success-message">
+    {{ message() }}
+  </div>
+  }
+
+  @if (errorMessage()) {
+  <div class="message error-message">
+    {{ errorMessage() }}
+  </div>
+  }
+
+  <section class="participants-section">
+    <div class="section-heading">
+      <div>
+        <h2>Participants</h2>
+        <p>Everyone's dishes and order status.</p>
+      </div>
+
+      <span class="participant-count">
+        {{ participants.length }} people
+      </span>
+    </div>
+
+    <div class="participants-list">
+      @for (participant of participants; track participant.id) {
+      <article class="participant-card">
+        <div class="participant-header">
+          <div class="participant-person">
+            <div class="avatar">
+              {{ participant.name.charAt(0).toUpperCase() }}
+            </div>
+
+            <div>
+              <h3>{{ participant.name }}</h3>
+
+              <span class="participant-type">
+                {{ participant.type }}
+              </span>
+            </div>
+          </div>
+
+          <div class="participant-actions">
+            <span class="order-status"
+                  [class.completed]="participant.isSubmitted">
+              {{ participant.isSubmitted ? 'Submitted' : 'Not submitted' }}
+            </span>
+
+            @if (participant.type === 'Guest' && status().status === 'Open') {
+            <button type="button"
+                    class="remove-button"
+                    (click)="removeGuest(participant.id)">
+              Remove
+            </button>
+            }
+          </div>
+        </div>
+
+        <div class="dishes-list">
+          @if (participant.items.length > 0) {
+          @for (item of participant.items; track item.dish.id) {
+          <div class="dish-row">
+            <div class="dish-image">
+              @if (item.dish.imageUrl) {
+              <img [src]="item.dish.imageUrl"
+                   [alt]="item.dish.name" />
+              }
+            </div>
+
+            <div class="dish-info">
+              <strong>{{ item.dish.name }}</strong>
+              <span>{{ item.dish.weight }}</span>
+            </div>
+
+            <span class="dish-quantity">
+              × {{ item.quantity }}
+            </span>
+
+            <strong class="dish-price">
+              {{ (item.dish.price * item.quantity).toFixed(2) }} $
+            </strong>
+          </div>
+          }
+          } @else {
+          <p class="empty-dishes">
+            This participant has not selected any dishes yet.
+          </p>
+          }
+        </div>
+
+        <div class="participant-footer">
+          <span>Participant total</span>
+          <strong>{{ participant.total.toFixed(2) }} $</strong>
+        </div>
+      </article>
+      }
+    </div>
+  </section>
+
+  <section class="actions-section">
+    <div>
+      <h2>Group order summary</h2>
+      <p>
+        Only submitted participants' dishes will be included in the final order.
+      </p>
+    </div>
+
+    <div class="action-buttons">
+      <button type="button"
+              class="reset-button"
+              (click)="resetDemo()">
+        Reset demo
+      </button>
+
+      <button type="button"
+              class="submit-button"
+              [disabled]="status().status !== 'Open'"
+              (click)="submitGroupOrder()">
+        {{ status().status === 'Open' ? 'Submit group order' : 'Order submitted' }}
+      </button>
+    </div>
+  </section>
+
+  @if (submittedDishes().length > 0) {
+  <section class="submitted-result">
+    <h2>Consolidated order</h2>
+    <p>The following dishes were included in the submitted group order:</p>
+
+    @for (dish of submittedDishes(); track dish.dishId) {
+    <div class="result-row">
+      <span>{{ dish.dishId }}</span>
+      <strong>× {{ dish.quantity }}</strong>
+    </div>
+    }
+  </section>
+  }
+
+  <footer class="page-footer">
+    This is an interactive demonstration. Changes are stored locally and reset
+    when the page is reloaded.
+  </footer>
+</div>

@@ -102,6 +102,13 @@ export const routes: Routes = [
             (m) => m.GuestPreOrderPageComponent
           ),
       },
+      {
+        path: 'demo/group-order',
+        loadComponent: () =>
+          import('./pages/group-order-demo-page/group-order-demo-page.component').then(
+            (m) => m.GroupOrderDemoPageComponent
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '', pathMatch: 'full' },
