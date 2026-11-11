@@ -56,11 +56,15 @@ const sum = (participant: Participant) =>
 export class GroupOrdersMockStore {
   private participants = initialParticipants();
   private status: GroupReservationStatus = 'Open';
+  private note: string | null = null;
+  private serveAt: string | null = null;
   readonly maxCapacity = 5;
 
   reset(): void {
     this.participants = initialParticipants();
     this.status = 'Open';
+    this.note = null;
+    this.serveAt = null;
   }
 
   snapshot(): GroupSessionsResponse {
@@ -69,13 +73,29 @@ export class GroupOrdersMockStore {
   }
 
   groupStatus(): GroupStatusResponse {
-    return { currentParticipants: this.participants.length, maxCapacity: this.maxCapacity, status: this.status };
+    const status: GroupStatusResponse = {
+      currentParticipants: this.participants.length,
+      maxCapacity: this.maxCapacity,
+      status: this.status,
+    };
+    if (this.status === 'Submitted') {
+      status.note = this.note;
+      status.serveAt = this.serveAt;
+    }
+    return status;
   }
 
-  submit(reservationId: string): SubmittedDish[] {
+  submit(reservationId: string, extras: { note?: string; serveAt?: string } = {}): SubmittedDish[] {
     if (this.status === 'Submitted') throw new MockHttpError(400, 'Group reservation was submitted.');
     if (this.status !== 'Open') throw new MockHttpError(400, `Cannot submit order. Group reservation is '${this.status}'.`);
     if (reservationId !== DEMO_RESERVATION_ID) throw new MockHttpError(400, 'Active order not found for this reservation.');
+
+    // Така сама валідація, як на справжньому беку.
+    const note = extras.note?.trim() ?? '';
+    if (note.length > 300) throw new MockHttpError(400, 'Note must be at most 300 characters.');
+    if (extras.serveAt && !/^([01]\d|2[0-3]):[0-5]\d$/.test(extras.serveAt)) {
+      throw new MockHttpError(400, 'serveAt must be in HH:mm format.');
+    }
 
     const submitted = this.participants.filter((p) => p.isSubmitted);
     if (submitted.length === 0) throw new MockHttpError(400, 'No submitted guest sessions found to consolidate.');
@@ -87,6 +107,8 @@ export class GroupOrdersMockStore {
     if (merged.size === 0) throw new MockHttpError(400, 'No dishes selected in the submitted guest sessions.');
 
     this.status = 'Submitted';
+    this.note = note || null;
+    this.serveAt = extras.serveAt || null;
     return [...merged].map(([dishId, quantity]) => ({ dishId, quantity }));
   }
 

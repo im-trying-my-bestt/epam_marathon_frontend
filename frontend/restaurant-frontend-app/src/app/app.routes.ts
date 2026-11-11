@@ -30,6 +30,16 @@ export const routes: Routes = [
     path: 'reservation-confirmed',
     component: ReservationConfirmedComponent,
   },
+  
+  {
+    path: 'reservations/:reservationId/group-order',
+    loadComponent: () =>
+      import('./pages/group-order-page/group-order-page.component').then(
+        (m) => m.GroupOrderPageComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { authorized: true },
+  },
   {
     path: 'reservations',
     component: ReservationDashboardComponent,

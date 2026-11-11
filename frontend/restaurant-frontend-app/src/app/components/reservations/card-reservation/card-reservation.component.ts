@@ -136,6 +136,16 @@ export class CardReservationComponent {
     );
   });
 
+  /** Групове бронювання: 2+ гостей, ще не завершене й не скасоване. */
+  readonly canOpenGroupOrder = computed(() => {
+    const reservation = this.r();
+    return (
+      reservation.guestCount > 1 &&
+      (reservation.status === ReservationStatusCustomer.Reserved ||
+        reservation.status === ReservationStatusCustomer.InProgress)
+    );
+  });
+
   readonly isAnonymous = computed(() => {
     return !this.r().customerId;
   });
@@ -173,6 +183,10 @@ export class CardReservationComponent {
       queryParams,
     });
   }
+  onGroupOrder(): void {
+    void this.router.navigate(['/reservations', this.r().id, 'group-order']);
+  }
+
   onPreOrderWaiter(): void {
     if (this.preOrderItemCount() > 0) {
       this.navigateToWaiterPreOrder();

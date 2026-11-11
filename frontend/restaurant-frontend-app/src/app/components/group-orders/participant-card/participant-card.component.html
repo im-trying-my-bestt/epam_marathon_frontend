@@ -1,0 +1,47 @@
+<article class="participant-card" [class.participant-card--me]="isMe()">
+  <header class="card-header">
+    <h2>{{ title() }}</h2>
+
+    <span class="status"
+          [class.status--submitted]="participant().isSubmitted">
+      {{ participant().isSubmitted ? 'Submitted' : 'Still choosing' }}
+    </span>
+  </header>
+
+  @if (isMe()) {
+  <span class="you-label">You</span>
+  }
+
+  @if (participant().items.length > 0) {
+  <ul class="dish-list">
+    @for (item of participant().items; track item.dish.id) {
+    <li class="dish-item">
+      @if (item.dish.imageUrl) {
+      <img [src]="item.dish.imageUrl"
+           [alt]="item.dish.name"
+           width="40"
+           height="40" />
+      }
+
+      <div class="dish-info">
+        <span class="dish-name">{{ item.dish.name }}</span>
+        <span class="dish-quantity">
+          {{ item.quantity }} × {{ item.dish.price | currency }}
+        </span>
+      </div>
+
+      <span class="dish-total">
+        {{ item.dish.price * item.quantity | currency }}
+      </span>
+    </li>
+    }
+  </ul>
+  } @else {
+  <p class="empty-cart">No dishes yet</p>
+  }
+
+  <footer class="card-footer">
+    <span>Subtotal</span>
+    <strong>{{ participant().total | currency }}</strong>
+  </footer>
+</article>

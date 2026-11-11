@@ -1,0 +1,116 @@
+@use 'app/shared/styles/abstracts/colors' as color;
+
+:host {
+  display: block;
+}
+
+.participant-card {
+  position: relative;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: color.$neutral-0;
+  border: 1px solid color.$neutral-200;
+
+  &--me {
+    border-color: color.$green-600;
+  }
+}
+
+.card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: color.$neutral-900;
+  }
+}
+
+.status {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: color.$neutral-700;
+  background: color.$neutral-200;
+
+  &--submitted {
+    color: color.$green-600;
+    background: color.$green-100;
+  }
+}
+
+.you-label {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: color.$green-600;
+}
+
+.dish-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dish-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  img {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+}
+
+.dish-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dish-name {
+  font-size: 14px;
+  color: color.$neutral-900;
+}
+
+.dish-quantity {
+  font-size: 12px;
+  color: color.$neutral-600;
+}
+
+.dish-total {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: color.$neutral-900;
+}
+
+.empty-cart {
+  margin: 16px 0;
+  font-size: 14px;
+  color: color.$neutral-600;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid color.$neutral-200;
+  font-size: 14px;
+  color: color.$neutral-900;
+}

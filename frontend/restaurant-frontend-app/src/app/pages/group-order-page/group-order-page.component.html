@@ -1,0 +1,164 @@
+<main class="page">
+  <header class="header">
+    <div class="title-row">
+      <h1 class="title">Group Pre-Order</h1>
+      @if (loadState() === 'ready') {
+        <span class="badge" [class.badge--sent]="!isOpen()">{{ statusLabel() }}</span>
+      }
+    </div>
+
+    @if (loadState() === 'ready') {
+      <div class="sync">
+        @if (updatedAt(); as time) {
+          <span class="sync-time">Updated at {{ time | date: 'HH:mm:ss' }}</span>
+        }
+        @if (refreshFailed()) {
+          <span class="sync-error" role="status">Couldn’t refresh</span>
+        }
+        @if (isOpen()) {
+          <button type="button" class="secondary-btn sync-btn" (click)="refresh()">Refresh</button>
+        }
+      </div>
+    }
+
+    @if (invite(); as info) {
+      <ul class="meta">
+        <li><img src="assets/svg/location-green.svg" alt="" width="16" height="16" />{{ info.LocationAddress }}</li>
+        <li><img src="assets/svg/calendar-green.svg" alt="" width="16" height="16" />{{ info.StartTime | date: 'MMM d, y' }}</li>
+        <li>
+          <img src="assets/svg/clock-green.svg" alt="" width="16" height="16" />{{ info.StartTime | date: 'HH:mm' }} –
+          {{ info.EndTime | date: 'HH:mm' }}
+        </li>
+        <li><img src="assets/svg/people-green.svg" alt="" width="16" height="16" />{{ participants().length }} of {{ info.MaxGuestCount }} guests</li>
+      </ul>
+    }
+  </header>
+
+  @switch (loadState()) {
+    @case ('loading') {
+      <p class="state" role="status">Loading…</p>
+    }
+    @case ('not-found') {
+      <div class="state" role="alert">
+        <p>Group reservation not found</p>
+      </div>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <p>Something went wrong while loading the pre-order.</p>
+        <button type="button" class="secondary-btn" (click)="load()">Try again</button>
+      </div>
+    }
+    @case ('ready') {
+      @if (isOpen() && unsubmittedCount() > 0) {
+        <p class="warning" role="status">
+          <img src="assets/svg/bell-regular.svg" alt="" width="16" height="16" />
+          <span>
+            {{ unsubmittedCount() }}
+            {{ unsubmittedCount() === 1 ? 'participant hasn’t' : 'participants haven’t' }} submitted their cart yet —
+            their dishes won’t be included in the order
+          </span>
+        </p>
+      }
+
+      <ul class="participants">
+        @for (person of participants(); track person.id) {
+          <li><app-participant-card [participant]="person" [isMe]="person.id === ownerSessionId()" /></li>
+        }
+      </ul>
+
+      <section class="consolidated" aria-labelledby="consolidated-title">
+        <h2 id="consolidated-title" class="consolidated-title">Consolidated pre-order</h2>
+        @if (consolidated().items.length) {
+          <ul class="consolidated-items">
+            @for (item of consolidated().items; track item.dish.id) {
+              <li class="consolidated-item">
+                <span>{{ item.dish.name }} × {{ item.quantity }}</span>
+                <span>{{ item.dish.price * item.quantity | currency }}</span>
+              </li>
+            }
+          </ul>
+        } @else if (!hasAnyDishes()) {
+          <p class="consolidated-empty">Participants haven’t added any dishes yet</p>
+        } @else {
+          <p class="consolidated-empty">No submitted carts with dishes yet</p>
+        }
+      </section>
+
+      <p class="grand-total">
+        <span>Grand Total</span>
+        <span class="grand-total-value">{{ consolidated().total | currency }}</span>
+      </p>
+
+      @if (hasSentNote()) {
+        <section class="sent-note" aria-labelledby="sent-note-title">
+          <h2 id="sent-note-title" class="consolidated-title">Note sent to restaurant</h2>
+          @if (sentServeAt()) {
+            <p class="sent-note-line">Serve at <strong>{{ sentServeAt() }}</strong></p>
+          }
+          @if (sentNote()) {
+            <p class="sent-note-text">{{ sentNote() }}</p>
+          }
+        </section>
+      }
+
+      @if (isOpen()) {
+        <button type="button" class="submit-btn" [disabled]="!canSubmit()" (click)="openConfirm()">
+          Submit Pre-Order
+        </button>
+      } @else {
+        <div class="submit-btn submit-btn--sent" aria-disabled="true">Submit Pre-Order</div>
+      }
+    }
+  }
+
+  @if (confirmOpen()) {
+    <app-modal title="Submit pre-order?" width="440px" [closeOnBackdrop]="!submitting()" (closed)="closeConfirm()">
+      <p class="dialog-text">
+        The order for {{ consolidated().total | currency }} will be sent to the restaurant. Participants who haven’t
+        submitted their cart won’t be included. You won’t be able to change it afterwards.
+      </p>
+
+      <div class="note-block">
+        <label class="field-label" for="order-note">Note for the restaurant <span class="optional">(optional)</span></label>
+        <div class="tags" role="group" aria-label="Quick tags">
+          @for (tag of quickTags; track tag.label) {
+            <button type="button" class="tag" [disabled]="submitting()" (click)="addTag(tag.text)">{{ tag.label }}</button>
+          }
+        </div>
+        <textarea
+          id="order-note"
+          class="note-input"
+          rows="4"
+          placeholder="e.g. nut allergy, please serve at 19:00"
+          [attr.maxlength]="noteMax"
+          [value]="note()"
+          [disabled]="submitting()"
+          (input)="onNoteInput($event)"
+        ></textarea>
+        <p class="counter" [class.counter--limit]="note().length >= noteMax">{{ note().length }} / {{ noteMax }}</p>
+
+        <label class="field-label" for="serve-at">Serve at <span class="optional">(optional)</span></label>
+        <input
+          id="serve-at"
+          class="time-input"
+          type="time"
+          [attr.min]="serveAtRange()?.min"
+          [attr.max]="serveAtRange()?.max"
+          [value]="serveAt()"
+          [disabled]="submitting()"
+          (input)="onServeAtInput($event)"
+        />
+        @if (serveAtError(); as message) {
+          <p class="field-error" role="alert">{{ message }}</p>
+        }
+      </div>
+      <button modal-actions type="button" class="secondary-btn" [disabled]="submitting()" (click)="closeConfirm()">
+        Cancel
+      </button>
+      <button modal-actions type="button" class="primary-btn" [disabled]="submitting() || !canConfirm()" (click)="confirmSubmit()">
+        {{ submitting() ? 'Submitting…' : 'Submit' }}
+      </button>
+    </app-modal>
+  }
+</main>

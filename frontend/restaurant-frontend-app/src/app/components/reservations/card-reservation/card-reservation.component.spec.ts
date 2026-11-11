@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { CardReservationComponent } from './card-reservation.component';
 import { API_BASE_URL } from '@app/shared/config/api-base-url.token';
 import { ReservationCustomer, ReservationStatusCustomer } from '@app/models/reservations/reservation.model';
@@ -35,5 +35,32 @@ describe('CardReservationComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  const groupButton = () =>
+    [...(fixture.nativeElement as HTMLElement).querySelectorAll('button')].find(
+      (b) => b.textContent?.trim() === 'Group order',
+    );
+
+  it('показує «Group order» для групового бронювання (2+ гостей)', () => {
+    expect(groupButton()).toBeDefined();
+  });
+
+  it('не показує «Group order» для бронювання на 1 гостя', () => {
+    fixture.componentRef.setInput('r', { ...RESERVATION, guestCount: 1 });
+    fixture.detectChanges();
+    expect(groupButton()).toBeUndefined();
+  });
+
+  it('не показує «Group order» для скасованого бронювання', () => {
+    fixture.componentRef.setInput('r', { ...RESERVATION, status: ReservationStatusCustomer.Cancelled });
+    fixture.detectChanges();
+    expect(groupButton()).toBeUndefined();
+  });
+
+  it('клік веде на /reservations/<id>/group-order', () => {
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    groupButton()?.click();
+    expect(navigate).toHaveBeenCalledWith(['/reservations', 'res-1', 'group-order']);
   });
 });

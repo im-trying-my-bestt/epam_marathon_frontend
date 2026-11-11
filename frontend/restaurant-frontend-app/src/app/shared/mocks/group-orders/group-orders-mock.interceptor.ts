@@ -54,7 +54,8 @@ export const groupOrdersMockInterceptor: HttpInterceptorFn = (req, next) => {
     return respond(() => store.groupStatus());
   }
   if (req.method === 'POST' && path.endsWith(`/group-reservations/${DEMO_GROUP_ID}/submit`)) {
-    return respond(() => store.submit((req.body as { reservationId?: string } | null)?.reservationId ?? ''));
+    const body = (req.body ?? {}) as { reservationId?: string; note?: string; serveAt?: string };
+    return respond(() => store.submit(body.reservationId ?? '', { note: body.note, serveAt: body.serveAt }));
   }
   if (req.method === 'DELETE' && path.includes(`${groupBase}/`)) {
     const guestSessionId = decodeURIComponent(path.slice(path.lastIndexOf('/') + 1));
